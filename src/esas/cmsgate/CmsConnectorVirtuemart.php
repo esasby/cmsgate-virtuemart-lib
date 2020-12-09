@@ -131,7 +131,7 @@ class CmsConnectorVirtuemart extends CmsConnectorJoomla
         return new CmsConnectorDescriptor(
             "cmsgate-virtuemart-lib",
             new VersionDescriptor(
-                "v1.0.0",
+                "v1.0.1",
                 "2020-12-02"
             ),
             "Cmsgate Virtuemart connector",
