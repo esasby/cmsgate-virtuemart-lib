@@ -85,6 +85,7 @@ class CmsgateModel extends JModelLegacy
             saveToLog("payment.log", 'Can not load module config');
             return null;
         }
+        $ret = array();
         //далее кусок кода взят из vmtable.php
         $params = explode('|', $rows[0]->$selectField);
         foreach ($params as $item) {

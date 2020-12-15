@@ -7,19 +7,15 @@
  */
 
 namespace esas\cmsgate;
-if (!class_exists('VmModel'))
-    require(JPATH_VM_ADMINISTRATOR . DS . 'helpers' . DS . 'vmmodel.php');
+if (!class_exists( 'VmConfig' )) require(JPATH_ROOT .'/administrator/components/com_virtuemart/helpers/config.php');
 
-use esas\cmsgate\cscart\CSCartPaymentMethod;
-use esas\cmsgate\cscart\CSCartPaymentProcessor;
 use esas\cmsgate\descriptors\CmsConnectorDescriptor;
 use esas\cmsgate\descriptors\VendorDescriptor;
 use esas\cmsgate\descriptors\VersionDescriptor;
-use esas\cmsgate\lang\LocaleLoaderVirtuemart;
-use esas\cmsgate\utils\RequestParamsCSCart;
 use esas\cmsgate\virtuemart\CmsgateModel;
 use esas\cmsgate\wrappers\OrderWrapper;
 use esas\cmsgate\wrappers\OrderWrapperVirtuemart;
+use VmConfig;
 use VmModel;
 
 class CmsConnectorVirtuemart extends CmsConnectorJoomla
@@ -32,9 +28,8 @@ class CmsConnectorVirtuemart extends CmsConnectorJoomla
 
     public function __construct()
     {
+        VmConfig::loadConfig();
         parent::__construct();
-        $this->orderModel = VmModel::getModel('orders');
-        $this->moduleModel = VmModel::getModel(Registry::getRegistry()->getModuleDescriptor()->getModuleMachineName());
     }
 
     /**
@@ -42,6 +37,8 @@ class CmsConnectorVirtuemart extends CmsConnectorJoomla
      */
     public function getOrderModel()
     {
+        if ($this->orderModel == null)
+            $this->orderModel = VmModel::getModel('orders');
         return $this->orderModel;
     }
 
@@ -50,6 +47,8 @@ class CmsConnectorVirtuemart extends CmsConnectorJoomla
      */
     public function getModuleModel()
     {
+        if ($this->moduleModel == null) //вынесено из конструктора, т.к. в нем нельзя обращаться к Registry
+            $this->moduleModel = VmModel::getModel(Registry::getRegistry()->getModuleDescriptor()->getModuleMachineName());
         return $this->moduleModel;
     }
 
@@ -131,8 +130,8 @@ class CmsConnectorVirtuemart extends CmsConnectorJoomla
         return new CmsConnectorDescriptor(
             "cmsgate-virtuemart-lib",
             new VersionDescriptor(
-                "v1.0.1",
-                "2020-12-02"
+                "v1.0.2",
+                "2020-12-15"
             ),
             "Cmsgate Virtuemart connector",
             "https://bitbucket.esas.by/projects/CG/repos/cmsgate-virtuemart-lib/browse",

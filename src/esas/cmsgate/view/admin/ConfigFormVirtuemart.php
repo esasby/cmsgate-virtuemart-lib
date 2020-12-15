@@ -9,6 +9,7 @@
 namespace esas\cmsgate\view\admin;
 
 use esas\cmsgate\CmsConnectorVirtuemart;
+use esas\cmsgate\utils\XMLUtils;
 use esas\cmsgate\view\admin\fields\ConfigField;
 use esas\cmsgate\view\admin\fields\ConfigFieldCheckbox;
 use esas\cmsgate\view\admin\fields\ConfigFieldList;
@@ -18,7 +19,7 @@ use esas\cmsgate\view\admin\fields\ConfigFieldTextarea;
 use esas\cmsgate\view\admin\fields\ListOption;
 use SimpleXMLElement;
 
-class ConfigFormVirtuemart extends ConfigFormXML
+class ConfigFormVirtuemart extends ConfigFormArray
 {
     private $orderStatuses;
 
@@ -33,6 +34,17 @@ class ConfigFormVirtuemart extends ConfigFormXML
             $this->orderStatuses[] = new ListOption($key, $value);
         }
     }
+
+    public function generate()
+    {
+        $fieldSetElement = new SimpleXMLElement("<fieldset />");
+        $fieldSetElement->addAttribute("name", $this->getFormKey());
+        foreach (parent::generate() as $key => $value) {
+            XMLUtils::simpleXMLAppend($fieldSetElement, $value);
+        }
+        return $fieldSetElement;
+    }
+
 
     /**
      * @return ListOption[]
