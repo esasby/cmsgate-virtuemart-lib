@@ -10,13 +10,12 @@ namespace esas\cmsgate\wrappers;
 
 use esas\cmsgate\CmsConnectorVirtuemart;
 use esas\cmsgate\Registry;
-use esas\cmsgate\virtuemart\CmsgateModel;
 use Throwable;
-use VmModel;
 
 class OrderWrapperVirtuemart extends OrderSafeWrapper
 {
     private $orderInfo;
+    private $extId;
 
     /**
      * OrderWrapperVirtuemart constructor.
@@ -25,7 +24,7 @@ class OrderWrapperVirtuemart extends OrderSafeWrapper
     {
         parent::__construct();
         $this->orderInfo = $orderInfo;
-        JPluginHelper::importPlugin(Registry::getRegistry()->getModuleDescriptor()->getModuleMachineName());
+        \JPluginHelper::importPlugin(Registry::getRegistry()->getModuleDescriptor()->getModuleMachineName());
     }
 
 
@@ -129,9 +128,9 @@ class OrderWrapperVirtuemart extends OrderSafeWrapper
      */
     public function getExtIdUnsafe()
     {
-//        $data = JEventDispatcher::getInstance()->trigger('getPluginInternalData', array($this->getOrderId()));
-//        return $data[CmsgateModel::DB_FIELD_EXT_TRX_ID];
-        return CmsConnectorVirtuemart::getInstance()->getModuleModel()->getExtTrxIdByOrderId($this->getOrderId());
+        if (empty($this->extId))
+            $this->extId = CmsConnectorVirtuemart::getInstance()->getModuleModel()->getExtTrxIdByOrderId($this->getOrderId());
+        return $this->extId;
     }
 
     /**
@@ -166,10 +165,11 @@ class OrderWrapperVirtuemart extends OrderSafeWrapper
      */
     public function saveExtId($extId)
     {
-//        $dbValues[CmsgateModel::DB_FIELD_ORDER_ID] = $this->getOrderId();
-//        $dbValues[CmsgateModel::DB_FIELD_EXT_TRX_ID] = $extId;
+//        $dbValues[CmsgateModelVirtuemart::DB_FIELD_ORDER_ID] = $this->getOrderId();
+//        $dbValues[CmsgateModelVirtuemart::DB_FIELD_EXT_TRX_ID] = $extId;
 //        JEventDispatcher::getInstance()->trigger('storePluginInternalData', array($dbValues));
         CmsConnectorVirtuemart::getInstance()->getModuleModel()->saveExtTrxId($this->getOrderId(), $extId); //через модель более простой и понятный код
+        $this->extId = $extId;
     }
 
     public function getClientIdUnsafe()

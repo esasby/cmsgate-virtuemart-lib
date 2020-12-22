@@ -2,15 +2,16 @@
 
 namespace esas\cmsgate\virtuemart;
 
+use esas\cmsgate\joomla\CmsgateModelJoomla;
 use esas\cmsgate\Registry;
+use esas\cmsgate\utils\Logger;
 use JDatabaseQuery;
-use \JModelLegacy;
 use \JFactory;
 use VmConfig;
 use vmLanguage;
 use vmText;
 
-class CmsgateModel extends JModelLegacy
+class CmsgateModelVirtuemart extends CmsgateModelJoomla
 {
     const DB_FIELD_EXT_TRX_ID = 'ext_trx_id';
     const DB_FIELD_ORDER_ID = 'virtuemart_order_id';
@@ -28,7 +29,7 @@ class CmsgateModel extends JModelLegacy
         $db->setQuery($query);
         $rows = $db->loadObjectList();
         if (count($rows) != 1) {
-            saveToLog("payment.log", 'Can not load extTrxId by orderId[' . $orderId . "]");
+            Logger::getLogger(get_class(static::class))->error('Can not load extTrxId by orderId[' . $orderId . "]");
             return null;
         }
         return $rows[0]->$selectField;
@@ -47,7 +48,7 @@ class CmsgateModel extends JModelLegacy
         $db->setQuery($query);
         $rows = $db->loadObjectList();
         if (count($rows) != 1) {
-            saveToLog("payment.log", 'Can not load orderId by extTrxId[' . $extTrxId . "]");
+//            saveToLog("payment.log", 'Can not load orderId by extTrxId[' . $extTrxId . "]");
             return null;
         }
         return $rows[0]->$selectField;
@@ -61,11 +62,11 @@ class CmsgateModel extends JModelLegacy
         $query
             ->insert(self::getModuleTableName())
             ->columns(array($db->quoteName(self::DB_FIELD_ORDER_ID), $db->quoteName(self::DB_FIELD_EXT_TRX_ID)))
-            ->values(array($orderId, $db->quote($extTrxId)));
+            ->values($db->quote($orderId) . ", " . $db->quote($extTrxId));
         $db->setQuery($query);
         if (@$db->execute())
         {
-            saveToLog("payment.log", 'Can not save extTrxId[' . $extTrxId . "]");
+//            saveToLog("payment.log", 'Can not save extTrxId[' . $extTrxId . "]");
         }
     }
 
@@ -82,7 +83,7 @@ class CmsgateModel extends JModelLegacy
         $db->setQuery($query);
         $rows = $db->loadObjectList();
         if (count($rows) != 1) {
-            saveToLog("payment.log", 'Can not load module config');
+//            saveToLog("payment.log", 'Can not load module config');
             return null;
         }
         $ret = array();
@@ -90,15 +91,7 @@ class CmsgateModel extends JModelLegacy
         $params = explode('|', $rows[0]->$selectField);
         foreach ($params as $item) {
             $item = explode('=', $item);
-            $key = $item[0];
-            unset($item[0]);
-            if (isset($item) && isset($varsToPushParam[$key][1])) {
-                $item = implode('=', $item);
-                $item = json_decode($item);
-                if ($item != null){
-                    $ret[$key] = $item;
-                }
-            }
+            $ret[$item[0]] = json_decode($item[1]);
         }
         return $ret;
     }

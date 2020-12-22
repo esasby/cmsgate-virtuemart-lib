@@ -12,7 +12,7 @@ if (!class_exists( 'VmConfig' )) require(JPATH_ROOT .'/administrator/components/
 use esas\cmsgate\descriptors\CmsConnectorDescriptor;
 use esas\cmsgate\descriptors\VendorDescriptor;
 use esas\cmsgate\descriptors\VersionDescriptor;
-use esas\cmsgate\virtuemart\CmsgateModel;
+use esas\cmsgate\virtuemart\CmsgateModelVirtuemart;
 use esas\cmsgate\wrappers\OrderWrapper;
 use esas\cmsgate\wrappers\OrderWrapperVirtuemart;
 use VmConfig;
@@ -22,7 +22,7 @@ class CmsConnectorVirtuemart extends CmsConnectorJoomla
 {
     private $orderModel;
     /**
-     * @var CmsgateModel
+     * @var CmsgateModelVirtuemart
      */
     private $moduleModel;
 
@@ -43,7 +43,7 @@ class CmsConnectorVirtuemart extends CmsConnectorJoomla
     }
 
     /**
-     * @return CmsgateModel
+     * @return CmsgateModelVirtuemart
      */
     public function getModuleModel()
     {
@@ -80,13 +80,13 @@ class CmsConnectorVirtuemart extends CmsConnectorJoomla
      */
     public function createOrderWrapperByOrderId($orderId)
     {
-        $orderInfo = $this->orderModel->getOrder($orderId);
+        $orderInfo = $this->getOrderModel()->getOrder($orderId);
         return new OrderWrapperVirtuemart($orderInfo);
     }
 
     public function createOrderWrapperByOrderNumber($orderNumber)
     {
-        $orderInfo = $this->orderModel->getOrderIdByOrderNumber($orderNumber);
+        $orderInfo = $this->getOrderModel()->getOrderIdByOrderNumber($orderNumber);
         return new OrderWrapperVirtuemart($orderInfo);
     }
 
@@ -130,7 +130,7 @@ class CmsConnectorVirtuemart extends CmsConnectorJoomla
         return new CmsConnectorDescriptor(
             "cmsgate-virtuemart-lib",
             new VersionDescriptor(
-                "v1.0.2",
+                "v1.1.0",
                 "2020-12-15"
             ),
             "Cmsgate Virtuemart connector",
