@@ -1,8 +1,6 @@
 <?php
-
-
 namespace esas\cmsgate\virtuemart;
-
+define('PATH_VIRTUEMART', JPATH_SITE . '/components/com_virtuemart/');
 
 use DOMDocument;
 use esas\cmsgate\ConfigFields;
@@ -10,6 +8,7 @@ use esas\cmsgate\joomla\InstallHelperJoomla;
 use esas\cmsgate\Registry;
 use esas\cmsgate\utils\XMLUtils;
 use Exception;
+use JDatabaseQuery;
 use \JFactory;
 use \JLanguageHelper;
 use stdClass;
@@ -38,17 +37,13 @@ class InstallHelperVirtuemart extends InstallHelperJoomla
     /**
      * @throws Exception
      */
-    public static function dbAddPaymentMethod()
+    public static function dbPaymentMethodAdd()
     {
         $extensionId = CmsgateModelVirtuemart::getExtensionId();
         if (empty($extensionId)) {
             throw new Exception('Can not detect extension id');
         }
-        $db = JFactory::getDBO();
-        $query = "SELECT * FROM `#__virtuemart_paymentmethods` WHERE payment_element = " . $db->quote(Registry::getRegistry()->getModuleDescriptor()->getModuleMachineName());
-        $db->setQuery($query);
-        $rows = $db->loadObjectList();
-        if (count($rows) != 0)
+        if (!empty(CmsgateModelVirtuemart::getPaymentMethodId()))
             return;
         $paymentMethod = new stdClass();
         $paymentMethod->payment_jplugin_id = $extensionId;
@@ -58,10 +53,13 @@ class InstallHelperVirtuemart extends InstallHelperJoomla
         $paymentMethod->shared = 0;
         $paymentMethod->virtuemart_vendor_id = 1;
         $paymentMethod->payment_params = self::createDefaultParams();
-        if (!JFactory::getDbo()->insertObject('#__virtuemart_paymentmethods', $paymentMethod, "virtuemart_paymentmethod_id"))
+        if (!JFactory::getDbo()->insertObject(
+            CmsgateModelVirtuemart::DB_TABLE_VIRTUEMART_PAYMENT_METHODS,
+            $paymentMethod,
+            CmsgateModelVirtuemart::DB_FIELD_PAYMENT_METHOD_ID))
             throw new Exception('Can not add new payment method');
         foreach (JLanguageHelper::getLanguages() as $lang) {
-            $tableName = '#__virtuemart_paymentmethods' . "_" . str_replace("-", "_", strtolower($lang->lang_code));
+            $tableName = CmsgateModelVirtuemart::DB_TABLE_VIRTUEMART_PAYMENT_METHODS . "_" . str_replace("-", "_", strtolower($lang->lang_code));
             if (!CmsgateModelVirtuemart::isTableExists($tableName))
                 continue;
             $paymentMethod_i18n = new stdClass();
@@ -74,11 +72,43 @@ class InstallHelperVirtuemart extends InstallHelperJoomla
         }
     }
 
-    private static function createDefaultParams() {
+    public static function dbPaymentMethodDelete()
+    {
+        $paymentMethodId = CmsgateModelVirtuemart::getPaymentMethodId();
+        if (empty(CmsgateModelVirtuemart::getPaymentMethodId()))
+            return;
+        $db = JFactory::getDbo();
+        /** @var JDatabaseQuery $query */
+        $query = $db->getQuery(true);
+        foreach (JLanguageHelper::getLanguages() as $lang) {
+            $tableName = CmsgateModelVirtuemart::DB_TABLE_VIRTUEMART_PAYMENT_METHODS . "_" . str_replace("-", "_", strtolower($lang->lang_code));
+            if (!CmsgateModelVirtuemart::isTableExists($tableName))
+                continue;
+            $query->delete($tableName);
+            $query->where($db->quoteName(CmsgateModelVirtuemart::DB_FIELD_PAYMENT_METHOD_ID) . ' = ' . $paymentMethodId);
+            $db->setQuery($query);
+            $db->execute();
+            $query->clear();
+        }
+        $query->delete($db->quoteName(CmsgateModelVirtuemart::DB_TABLE_VIRTUEMART_PAYMENT_METHODS));
+        $query->where($db->quoteName(CmsgateModelVirtuemart::DB_FIELD_PAYMENT_METHOD_ID) . ' = ' . $paymentMethodId);
+        $db->setQuery($query);
+        return $db->execute();
+    }
+
+    private static function createDefaultParams()
+    {
         $params = array();
         foreach (Registry::getRegistry()->getManagedFieldsFactory()->getManagedFields() as $managedField) {
             $params[] = $managedField->getKey() . '=' . json_encode($managedField->getDefault());
         }
         return implode("|", $params);
+    }
+
+    public static function deleteFiles() {
+        $ret = true;
+        $ret = $ret && self::deleteWithLogging(PATH_VIRTUEMART . 'models/' . Registry::getRegistry()->getPaySystemName() . ".php");
+        $ret = $ret && self::deleteWithLogging(PATH_VIRTUEMART . 'controllers/' . Registry::getRegistry()->getPaySystemName().  ".php");
+        return $ret;
     }
 }

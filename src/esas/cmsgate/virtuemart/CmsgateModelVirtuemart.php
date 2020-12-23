@@ -15,6 +15,8 @@ class CmsgateModelVirtuemart extends CmsgateModelJoomla
 {
     const DB_FIELD_EXT_TRX_ID = 'ext_trx_id';
     const DB_FIELD_ORDER_ID = 'virtuemart_order_id';
+    const DB_FIELD_PAYMENT_METHOD_ID = 'virtuemart_paymentmethod_id';
+    const DB_TABLE_VIRTUEMART_PAYMENT_METHODS = '#__virtuemart_paymentmethods';
 
     public static function getExtTrxIdByOrderId($orderId)
     {
@@ -78,7 +80,7 @@ class CmsgateModelVirtuemart extends CmsgateModelJoomla
         $query = $db->getQuery(true);
         $query
             ->select($selectField)
-            ->from('#__virtuemart_paymentmethods')
+            ->from(self::DB_TABLE_VIRTUEMART_PAYMENT_METHODS)
             ->where("payment_element = '" . Registry::getRegistry()->getModuleDescriptor()->getModuleMachineName() . "'");
         $db->setQuery($query);
         $rows = $db->loadObjectList();
@@ -115,6 +117,23 @@ class CmsgateModelVirtuemart extends CmsgateModelJoomla
             $ret[$value->value] = vmText::_($value->text);
         }
         return $ret;
+    }
+
+    public static function getPaymentMethodId() {
+        $db = JFactory::getDBO();
+        /** @var JDatabaseQuery $query */
+        $query = $db->getQuery(true);
+        $query
+            ->select(self::DB_FIELD_PAYMENT_METHOD_ID)
+            ->from(self::DB_TABLE_VIRTUEMART_PAYMENT_METHODS)
+            ->where("payment_element = '" . Registry::getRegistry()->getModuleDescriptor()->getModuleMachineName() . "'");
+        $db->setQuery($query);
+        $rows = $db->loadObjectList();
+        if (count($rows) != 1) {
+//            saveToLog("payment.log", 'Can not load module config');
+            return null;
+        }
+        return $rows[0]->virtuemart_paymentmethod_id;
     }
 
     public static function getModuleTableName()
