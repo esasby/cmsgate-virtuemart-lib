@@ -15,6 +15,8 @@ use esas\cmsgate\descriptors\VersionDescriptor;
 use esas\cmsgate\virtuemart\CmsgateModelVirtuemart;
 use esas\cmsgate\wrappers\OrderWrapper;
 use esas\cmsgate\wrappers\OrderWrapperVirtuemart;
+use Exception;
+use Joomla\CMS\Uri\Uri;
 use VmConfig;
 use VmModel;
 
@@ -81,13 +83,17 @@ class CmsConnectorVirtuemart extends CmsConnectorJoomla
     public function createOrderWrapperByOrderId($orderId)
     {
         $orderInfo = $this->getOrderModel()->getOrder($orderId);
+        if (empty($orderInfo))
+            throw new Exception("Incorrect orderId[" . $orderId . "]");
         return new OrderWrapperVirtuemart($orderInfo);
     }
 
     public function createOrderWrapperByOrderNumber($orderNumber)
     {
-        $orderInfo = $this->getOrderModel()->getOrderIdByOrderNumber($orderNumber);
-        return new OrderWrapperVirtuemart($orderInfo);
+        $orderId = $this->getOrderModel()->getOrderIdByOrderNumber($orderNumber);
+        if (empty($orderId))
+            throw new Exception("Incorrect orderNumber[" . $orderNumber . "]");
+        return $this->createOrderWrapperByOrderId($orderId);
     }
 
     /**
@@ -139,5 +145,20 @@ class CmsConnectorVirtuemart extends CmsConnectorJoomla
             "virtuemart",
             "plugin"
         );
+    }
+
+    public static function generateControllerPath($controller, $task)
+    {
+        return "index.php?option=com_virtuemart&view=" . $controller . "&task=" . $task;
+    }
+
+    public static function generatePaySystemControllerPath($task)
+    {
+        return self::generateControllerPath(Registry::getRegistry()->getPaySystemName(), $task);
+    }
+
+    public static function generatePaySystemControllerUrl($task)
+    {
+        return Uri::root() . self::generatePaySystemControllerPath($task);
     }
 }
