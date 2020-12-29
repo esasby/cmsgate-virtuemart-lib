@@ -1,6 +1,7 @@
 <?php
 namespace esas\cmsgate\virtuemart;
 define('PATH_VIRTUEMART', JPATH_SITE . '/components/com_virtuemart/');
+define('PATH_VIRTUEMART_ADMINISTRATOR', JPATH_ADMINISTRATOR . '/components/com_virtuemart/');
 
 use DOMDocument;
 use esas\cmsgate\ConfigFields;
@@ -106,9 +107,10 @@ class InstallHelperVirtuemart extends InstallHelperJoomla
     }
 
     public static function deleteFiles() {
-        $ret = true;
-        $ret = $ret && self::deleteWithLogging(PATH_VIRTUEMART . 'models/' . Registry::getRegistry()->getPaySystemName() . ".php");
-        $ret = $ret && self::deleteWithLogging(PATH_VIRTUEMART . 'controllers/' . Registry::getRegistry()->getPaySystemName().  ".php");
-        return $ret;
+        $ret1 = self::deleteWithLogging(PATH_VIRTUEMART . 'models/' . Registry::getRegistry()->getPaySystemName() . ".php");
+        $ret2 = self::deleteWithLogging(PATH_VIRTUEMART . 'controllers/' . Registry::getRegistry()->getPaySystemName().  ".php");
+        $ret3 = self::deleteWithLogging(PATH_VIRTUEMART_ADMINISTRATOR . 'models/' . Registry::getRegistry()->getPaySystemName() . ".php");
+        $ret4 = self::deleteWithLogging(PATH_VIRTUEMART_ADMINISTRATOR . 'controllers/' . Registry::getRegistry()->getPaySystemName().  ".php");
+        return $ret1 && $ret2 && $ret3 && $ret4;
     }
 }
